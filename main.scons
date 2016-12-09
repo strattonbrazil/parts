@@ -1,0 +1,12 @@
+includePath = [
+    '/usr/include',
+    './src',
+    '/usr/include/python2.7'
+]
+
+env = Environment(CPPPATH=includePath)
+
+libs = ['sfml-window','sfml-system','sfml-graphics', 'GLU', 'GL', 'python2.7', 'boost_python']
+libPath = ['/usr/lib', '/usr/local/lib']
+
+env.Program('bin/SFMLApp', Glob("src/*.cpp"), LIBS=libs, LIBPATH=libPath, CXXFLAGS="-std=c++17")
