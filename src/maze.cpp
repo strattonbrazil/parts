@@ -31,7 +31,17 @@ Maze::Maze(int width, int height)
 
     boost::python::object mazeLib = boost::python::import("maze");
     boost::python::object createMaze = mazeLib.attr("create_maze");
-    createMaze(4,5);
+    boost::python::object maze = createMaze(3,3);
+    std::cout << "len of open walls: " << len(maze) << std::endl;
+    for (int i = 0; i < len(maze); i++) {
+        boost::python::object openWall(maze[i]);
+        const int x = boost::python::extract<int>(boost::python::object(openWall[0]));
+        const int y = boost::python::extract<int>(boost::python::object(openWall[1]));
+        char const* c_str = boost::python::extract<char const*>(boost::python::object(openWall[2]));
+
+        std::cout << "x: " << x << " y: " << y << " " << c_str << std::endl;
+    }
+
     //exec("from maze import foo", main_namespace);
     //boost::python::object foo = eval("foo", main_namespace);
     //std::cout << boost::python::extract<double>(foo) << std::endl;
