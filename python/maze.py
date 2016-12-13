@@ -2,16 +2,16 @@ import sys
 import random
 
 def create_walls_for_cell(cell, width, height):
-    x,y = cell
+    row,column = cell
     walls = []
-    if x > 0:
-        walls.append((x-1,y,"right"))
-    if x < width - 1:
-        walls.append((x,y,"right"))
-    if y > 0:
-        walls.append((x,(y-1),"down"))
-    if y < height - 1:
-        walls.append((x, y, "down"))
+    if column > 0: # left wall
+        walls.append((row,column-1,"right"))
+    if column < width - 1: # right wall
+        walls.append((row,column,"right"))
+    if row > 0: # up wall
+        walls.append((row-1,column,"down"))
+    if row < height - 1: # down wall
+        walls.append((row, column, "down"))
     return walls
 
 def create_maze(width, height):
@@ -36,10 +36,10 @@ def create_maze(width, height):
         # get two rooms
         if wall[2] == "right":
             room1 = (wall[0], wall[1])
-            room2 = (wall[0]+1, wall[1])
+            room2 = (wall[0], wall[1]+1)
         else: # down
             room1 = (wall[0], wall[1])
-            room2 = (wall[0], wall[1]+1)
+            room2 = (wall[0]+1, wall[1])
 
         # only one of the rooms is in the path
         if (room1 in path and room2 not in path) or (room1 not in path and room2 in path):
@@ -59,4 +59,4 @@ if __name__ == "__main__":
     if len(sys.argv) < 3:
         print("usage: ./maze.py width height")
         exit(1)
-    create_maze(int(sys.argv[1]), int(sys.argv[2]))
+    print create_maze(int(sys.argv[1]), int(sys.argv[2]))
