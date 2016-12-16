@@ -1,9 +1,9 @@
 #include <maze.hpp>
+#include <constants.hpp>
+#include <util.hpp>
 
 #include <SFML/OpenGL.hpp>
-
 #include <tuple>
-
 #include <boost/python.hpp>
 
 #include <iostream>
@@ -13,13 +13,7 @@ inline std::string wallToKey(int row, int column, std::string dir)
     return std::to_string(row) + "_" + std::to_string(column) + "_" + dir;
 }
 
-inline sf::Vector2f normalize(sf::Vector2i a)
-{
-    float invLen = 1.0f / sqrt((a.x * a.x) + (a.y * a.y));
-    return sf::Vector2f(a.x * invLen, a.y * invLen);
-}
-
-inline void drawQuad(sf::Vector2i a, sf::Vector2i b, sf::Vector2i c, sf::Vector2i d)
+inline void drawQuad(sf::Vector2f a, sf::Vector2f b, sf::Vector2f c, sf::Vector2f d)
 {
     glVertex2f(a.x, a.y);
     glVertex2f(b.x, b.y);
@@ -29,7 +23,7 @@ inline void drawQuad(sf::Vector2i a, sf::Vector2i b, sf::Vector2i c, sf::Vector2
 
 inline void drawLine(sf::Vector2i a, sf::Vector2i b, float thickness = 2.0f)
 {
-    sf::Vector2f dir = normalize(b - a);
+    sf::Vector2f dir = normalize(toF(b - a));
     sf::Vector2f dirRotated(dir.y, -dir.x);
 
     // TODO: offset this beast to be centered on points
@@ -91,9 +85,7 @@ Maze::~Maze()
 }
 
 // for drawing maze
-const int CELL_OFFSET = 50;
 const int PADDING = 3;
-const int MAZE_OFFSET = 30;
 
 void Maze::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
@@ -138,6 +130,7 @@ void Maze::draw(sf::RenderTarget& target, sf::RenderStates states) const
 
     // draw stencil
 #if 1
+    sf::Vector2f correctedPosition = toF(_playerPosition - sf::Vector2i(MAZE_OFFSET, MAZE_OFFSET));
     glBegin(GL_QUADS);
     {
         glColor3f(1,0,0);
@@ -145,31 +138,31 @@ void Maze::draw(sf::RenderTarget& target, sf::RenderStates states) const
             for (int column = 0; column < MAZE_WIDTH; column++) {
                 Cell cell = getCell(row, column);
                 if (!cell.up) {
-                    sf::Vector2i a(column*CELL_OFFSET, row*CELL_OFFSET);
-                    sf::Vector2i b((column+1)*CELL_OFFSET, row*CELL_OFFSET);
-                    sf::Vector2i aV = extendFromCursor(a);
-                    sf::Vector2i bV = extendFromCursor(b);
+                    sf::Vector2f a(column*CELL_OFFSET, row*CELL_OFFSET);
+                    sf::Vector2f b((column+1)*CELL_OFFSET, row*CELL_OFFSET);
+                    sf::Vector2f aV = extendFromPoint(correctedPosition, a);
+                    sf::Vector2f bV = extendFromPoint(correctedPosition, b);
                     drawQuad(a, b, bV, aV);
                 }
                 if (!cell.down) {
-                    sf::Vector2i a(column*CELL_OFFSET, (row+1)*CELL_OFFSET);
-                    sf::Vector2i b((column+1)*CELL_OFFSET, (row+1)*CELL_OFFSET);
-                    sf::Vector2i aV = extendFromCursor(a);
-                    sf::Vector2i bV = extendFromCursor(b);
+                    sf::Vector2f a(column*CELL_OFFSET, (row+1)*CELL_OFFSET);
+                    sf::Vector2f b((column+1)*CELL_OFFSET, (row+1)*CELL_OFFSET);
+                    sf::Vector2f aV = extendFromPoint(correctedPosition, a);
+                    sf::Vector2f bV = extendFromPoint(correctedPosition, b);
                     drawQuad(a, b, bV, aV);
                 }
                 if (!cell.left) {
-                    sf::Vector2i a(column*CELL_OFFSET, row*CELL_OFFSET);
-                    sf::Vector2i b(column*CELL_OFFSET, (row+1)*CELL_OFFSET);
-                    sf::Vector2i aV = extendFromCursor(a);
-                    sf::Vector2i bV = extendFromCursor(b);
+                    sf::Vector2f a(column*CELL_OFFSET, row*CELL_OFFSET);
+                    sf::Vector2f b(column*CELL_OFFSET, (row+1)*CELL_OFFSET);
+                    sf::Vector2f aV = extendFromPoint(correctedPosition, a);
+                    sf::Vector2f bV = extendFromPoint(correctedPosition, b);
                     drawQuad(a, b, bV, aV);
                 }
                 if (!cell.right) {
-                    sf::Vector2i a(column*CELL_OFFSET+CELL_OFFSET, row*CELL_OFFSET);
-                    sf::Vector2i b(column*CELL_OFFSET+CELL_OFFSET, (row+1)*CELL_OFFSET);
-                    sf::Vector2i aV = extendFromCursor(a);
-                    sf::Vector2i bV = extendFromCursor(b);
+                    sf::Vector2f a(column*CELL_OFFSET+CELL_OFFSET, row*CELL_OFFSET);
+                    sf::Vector2f b(column*CELL_OFFSET+CELL_OFFSET, (row+1)*CELL_OFFSET);
+                    sf::Vector2f aV = extendFromPoint(correctedPosition, a);
+                    sf::Vector2f bV = extendFromPoint(correctedPosition, b);
                     drawQuad(a, b, bV, aV);
                 }
             }
@@ -204,17 +197,12 @@ Cell Maze::getCell(int row, int column) const
     return cell;
 }
 
+void Maze::setPlayerPosition(sf::Vector2i pos)
+{
+    _playerPosition = pos;
+}
+
 void Maze::setCursorPosition(sf::Vector2i pos)
 {
     _cursorPosition = pos;
-}
-
-sf::Vector2i Maze::extendFromCursor(sf::Vector2i p) const
-{
-    // the maze is offset, so offset the cursor to compensate
-    sf::Vector2i correctedPosition = _cursorPosition - sf::Vector2i(MAZE_OFFSET, MAZE_OFFSET);
-
-    sf::Vector2f v = normalize(p - correctedPosition);
-    v *= 5000.0f; // amount to extend
-    return sf::Vector2i(v) + p;
 }

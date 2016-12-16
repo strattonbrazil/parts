@@ -1,7 +1,9 @@
 #include <SFML/Audio.hpp>
 #include <SFML/Graphics.hpp>
 
+#include <player.hpp>
 #include <maze.hpp>
+#include <util.hpp>
 
 #include <iostream>
 
@@ -18,6 +20,7 @@ int main()
        return EXIT_FAILURE;
     sf::Text text("Hello SFML", font, 50);
 
+    Player player;
     Maze maze(9,9);
 
     // Create the main window
@@ -42,13 +45,34 @@ int main()
         // Draw the string
         //window.draw(text);
 
+        if (!player.isMoving()) {
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
+                player.setMove(sf::Vector2i(1,0));
+            } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
+                player.setMove(sf::Vector2i(-1,0));
+            } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
+                player.setMove(sf::Vector2i(0,-1));
+            } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
+                player.setMove(sf::Vector2i(0,1));
+            }
+        }
+
+        player.update();
+
         sf::Vector2i globalPosition = sf::Mouse::getPosition();
 
         // get the local mouse position (relative to a window)
         sf::Vector2i localPosition = sf::Mouse::getPosition(window);
 
+        maze.setPlayerPosition(player.screenPos());
         maze.setCursorPosition(localPosition);
 
+        sf::Vector2i playerPos = player.screenPos();
+        sf::Vector2i desiredDir = localPosition - playerPos;
+
+        player.setDirection(normalize(toF(desiredDir)));
+
+        window.draw(player);
         window.draw(maze);
 
         // Update the window
