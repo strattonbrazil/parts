@@ -125,9 +125,12 @@ void Maze::draw(sf::RenderTarget& target, sf::RenderStates states) const
     // player position in row/column form
     sf::Vector2f correctedPosition(_playerPosition.y, _playerPosition.x);
 
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glBegin(GL_QUADS);
     {
-        glColor3f(1,0,0);
+        //glColor4f(1,0,0,0.2f);
+        glColor4f(0,0,0,1);
         for (int row = 0; row < MAZE_HEIGHT; row++) {
             for (int column = 0; column < MAZE_WIDTH; column++) {
                 Cell cell = getCell(row, column);
@@ -163,6 +166,7 @@ void Maze::draw(sf::RenderTarget& target, sf::RenderStates states) const
         }
     }
     glEnd();
+    glDisable(GL_BLEND);
 #endif
 }
 
@@ -174,6 +178,18 @@ Cell Maze::getCell(int row, int column) const
     cell.up = _openWalls.find(wallToKey(row-1, column, "down")) != _openWalls.end();
     cell.down = _openWalls.find(wallToKey(row, column, "down")) != _openWalls.end();
     return cell;
+}
+
+bool Maze::hasWall(int row, int column, std::string dir)
+{
+    if (dir == "left") {
+        dir = "right";
+        column -= 1;
+    } else if (dir == "up") {
+        dir = "down";
+        row -= 1;
+    }
+    return !(_openWalls.find(wallToKey(row, column, dir)) != _openWalls.end());
 }
 
 void Maze::setPlayerPosition(sf::Vector2f pos)

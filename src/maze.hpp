@@ -20,6 +20,7 @@ public:
 
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
     Cell getCell(int row, int column) const;
+    bool hasWall(int row, int column, std::string dir);
 
     void setPlayerPosition(sf::Vector2f pos); // in row/column space
     void setCursorPosition(sf::Vector2i pos);

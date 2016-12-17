@@ -32,7 +32,7 @@ void Player::draw(sf::RenderTarget& target, sf::RenderStates states) const
 void Player::update()
 {
     if (_moving) {
-        _transition += 0.002f;
+        _transition += 0.001f;
         if (_transition > 0.99999f) {
             _moving = false;
             _from = _to;

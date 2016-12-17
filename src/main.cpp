@@ -22,8 +22,8 @@ int main()
     sf::Text text("Hello SFML", font, 50);
 
     Player player;
-    const int NUM_ROWS = 9;
-    const int NUM_COLUMNS = 9;
+    const int NUM_ROWS = 5;
+    const int NUM_COLUMNS = 5;
     Maze maze(NUM_ROWS,NUM_COLUMNS);
 
     // Create the main window
@@ -49,13 +49,14 @@ int main()
         //window.draw(text);
 
         if (!player.isMoving()) {
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
+            sf::Vector2f pos = player.mazePos();
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::S) && !maze.hasWall(pos.x, pos.y, "down")) {
                 player.setMove(sf::Vector2i(1,0));
-            } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
+            } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::W) && !maze.hasWall(pos.x, pos.y, "up")) {
                 player.setMove(sf::Vector2i(-1,0));
-            } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
+            } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) && !maze.hasWall(pos.x, pos.y, "left")) {
                 player.setMove(sf::Vector2i(0,-1));
-            } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
+            } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D) && !maze.hasWall(pos.x, pos.y, "right")) {
                 player.setMove(sf::Vector2i(0,1));
             }
         }
