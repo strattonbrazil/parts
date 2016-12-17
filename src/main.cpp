@@ -1,5 +1,6 @@
 #include <SFML/Audio.hpp>
 #include <SFML/Graphics.hpp>
+#include <SFML/OpenGL.hpp>
 
 #include <player.hpp>
 #include <maze.hpp>
@@ -21,7 +22,9 @@ int main()
     sf::Text text("Hello SFML", font, 50);
 
     Player player;
-    Maze maze(9,9);
+    const int NUM_ROWS = 9;
+    const int NUM_COLUMNS = 9;
+    Maze maze(NUM_ROWS,NUM_COLUMNS);
 
     // Create the main window
     sf::RenderWindow window(sf::VideoMode(800, 600), "OpenGL", sf::Style::Default, sf::ContextSettings(32)); //"SFML window");
@@ -64,16 +67,28 @@ int main()
         // get the local mouse position (relative to a window)
         sf::Vector2i localPosition = sf::Mouse::getPosition(window);
 
-        maze.setPlayerPosition(player.screenPos());
-        maze.setCursorPosition(localPosition);
+        maze.setPlayerPosition(player.mazePos());
 
-        sf::Vector2i playerPos = player.screenPos();
-        sf::Vector2i desiredDir = localPosition - playerPos;
 
-        player.setDirection(normalize(toF(desiredDir)));
+        sf::Vector2u windowSize = window.getSize();
+        float aspect = (float)windowSize.x / windowSize.y;
+        const float CELL_HEIGHT = NUM_ROWS + 2; // leave cell worth on top and bottom
+        const float PIXELS_PER_CELL = windowSize.y / CELL_HEIGHT;
+        const float NUM_HORIZONTAL_CELLS = windowSize.x / PIXELS_PER_CELL;
 
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0, aspect * CELL_HEIGHT, CELL_HEIGHT, 0, -1, 1);
+
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        glTranslatef((NUM_HORIZONTAL_CELLS - NUM_COLUMNS) * 0.5f, 1, 0);
+        glPushMatrix();
         window.draw(player);
+        glPopMatrix();
+        glPushMatrix();
         window.draw(maze);
+        glPopMatrix();
 
         // Update the window
         window.display();

@@ -1,5 +1,4 @@
 #include <maze.hpp>
-#include <constants.hpp>
 #include <util.hpp>
 
 #include <SFML/OpenGL.hpp>
@@ -85,19 +84,12 @@ Maze::~Maze()
 }
 
 // for drawing maze
-const int PADDING = 3;
+const float PADDING = 0.05f;
 
 void Maze::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
     sf::Vector2u viewport = target.getSize();
     glViewport(0, 0, viewport.x, viewport.y);
-
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0, viewport.x, viewport.y, 0, -1, 1);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glTranslatef(MAZE_OFFSET, MAZE_OFFSET, 0);
 
     glLineWidth(3.0f);
     glBegin(GL_LINES);
@@ -106,23 +98,23 @@ void Maze::draw(sf::RenderTarget& target, sf::RenderStates states) const
             Cell cell = getCell(row, column);
             if (!cell.up) {
                 glColor3f(1,0,0);
-                glVertex2f(column*CELL_OFFSET, row*CELL_OFFSET + PADDING);
-                glVertex2f((column+1)*CELL_OFFSET, row*CELL_OFFSET + PADDING);
+                glVertex2f(column, row + PADDING);
+                glVertex2f(column+1, row + PADDING);
             }
             if (!cell.down) {
                 glColor3f(1,1,1);
-                glVertex2f(column*CELL_OFFSET, (row+1)*CELL_OFFSET - PADDING);
-                glVertex2f((column+1)*CELL_OFFSET, (row+1)*CELL_OFFSET - PADDING);
+                glVertex2f(column, row+1 - PADDING);
+                glVertex2f(column+1, row+1 - PADDING);
             }
             if (!cell.left) {
                 glColor3f(0,1,1);
-                glVertex2f(column*CELL_OFFSET + PADDING, row*CELL_OFFSET);
-                glVertex2f(column*CELL_OFFSET + PADDING, (row+1)*CELL_OFFSET);
+                glVertex2f(column + PADDING, row);
+                glVertex2f(column + PADDING, row+1);
             }
             if (!cell.right) {
                 glColor3f(1,0,1);
-                glVertex2f(column*CELL_OFFSET+CELL_OFFSET - PADDING, row*CELL_OFFSET);
-                glVertex2f(column*CELL_OFFSET+CELL_OFFSET - PADDING, (row+1)*CELL_OFFSET);
+                glVertex2f(column+1 - PADDING, row);
+                glVertex2f(column+1 - PADDING, row+1);
             }
         }
     }
@@ -130,7 +122,9 @@ void Maze::draw(sf::RenderTarget& target, sf::RenderStates states) const
 
     // draw stencil
 #if 1
-    sf::Vector2f correctedPosition = toF(_playerPosition - sf::Vector2i(MAZE_OFFSET, MAZE_OFFSET));
+    // player position in row/column form
+    sf::Vector2f correctedPosition(_playerPosition.y, _playerPosition.x);
+
     glBegin(GL_QUADS);
     {
         glColor3f(1,0,0);
@@ -138,29 +132,29 @@ void Maze::draw(sf::RenderTarget& target, sf::RenderStates states) const
             for (int column = 0; column < MAZE_WIDTH; column++) {
                 Cell cell = getCell(row, column);
                 if (!cell.up) {
-                    sf::Vector2f a(column*CELL_OFFSET, row*CELL_OFFSET);
-                    sf::Vector2f b((column+1)*CELL_OFFSET, row*CELL_OFFSET);
+                    sf::Vector2f a(column, row);
+                    sf::Vector2f b(column+1, row);
                     sf::Vector2f aV = extendFromPoint(correctedPosition, a);
                     sf::Vector2f bV = extendFromPoint(correctedPosition, b);
                     drawQuad(a, b, bV, aV);
                 }
                 if (!cell.down) {
-                    sf::Vector2f a(column*CELL_OFFSET, (row+1)*CELL_OFFSET);
-                    sf::Vector2f b((column+1)*CELL_OFFSET, (row+1)*CELL_OFFSET);
+                    sf::Vector2f a(column, row+1);
+                    sf::Vector2f b(column+1, row+1);
                     sf::Vector2f aV = extendFromPoint(correctedPosition, a);
                     sf::Vector2f bV = extendFromPoint(correctedPosition, b);
                     drawQuad(a, b, bV, aV);
                 }
                 if (!cell.left) {
-                    sf::Vector2f a(column*CELL_OFFSET, row*CELL_OFFSET);
-                    sf::Vector2f b(column*CELL_OFFSET, (row+1)*CELL_OFFSET);
+                    sf::Vector2f a(column, row);
+                    sf::Vector2f b(column, row+1);
                     sf::Vector2f aV = extendFromPoint(correctedPosition, a);
                     sf::Vector2f bV = extendFromPoint(correctedPosition, b);
                     drawQuad(a, b, bV, aV);
                 }
                 if (!cell.right) {
-                    sf::Vector2f a(column*CELL_OFFSET+CELL_OFFSET, row*CELL_OFFSET);
-                    sf::Vector2f b(column*CELL_OFFSET+CELL_OFFSET, (row+1)*CELL_OFFSET);
+                    sf::Vector2f a(column+1, row);
+                    sf::Vector2f b(column+1, row+1);
                     sf::Vector2f aV = extendFromPoint(correctedPosition, a);
                     sf::Vector2f bV = extendFromPoint(correctedPosition, b);
                     drawQuad(a, b, bV, aV);
@@ -170,21 +164,6 @@ void Maze::draw(sf::RenderTarget& target, sf::RenderStates states) const
     }
     glEnd();
 #endif
-
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glTranslatef(_cursorPosition.x, _cursorPosition.y, 0);
-
-    // draw cursor
-    glColor3f(1,0,0);
-    glBegin(GL_QUADS);
-    {
-        glVertex2f(-5,-5);
-        glVertex2f(5,-5);
-        glVertex2f(5,5);
-        glVertex2f(-5,5);
-    }
-    glEnd();
 }
 
 Cell Maze::getCell(int row, int column) const
@@ -197,7 +176,7 @@ Cell Maze::getCell(int row, int column) const
     return cell;
 }
 
-void Maze::setPlayerPosition(sf::Vector2i pos)
+void Maze::setPlayerPosition(sf::Vector2f pos)
 {
     _playerPosition = pos;
 }
