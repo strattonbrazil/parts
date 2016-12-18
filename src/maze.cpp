@@ -34,8 +34,6 @@ inline void drawLine(sf::Vector2i a, sf::Vector2i b, float thickness = 2.0f)
 
 Maze::Maze(int width, int height) : MAZE_WIDTH(width), MAZE_HEIGHT(height)
 {
-    Py_Initialize();
-
     // now time to insert the current working directory into the python path so module search can take advantage
     // this must happen after python has been initialised
     PyObject* sysPath = PySys_GetObject((char*)"path");
@@ -125,7 +123,6 @@ void Maze::draw(sf::RenderTarget& target, sf::RenderStates states) const
     // player position in row/column form
     sf::Vector2f correctedPosition(_playerPosition.y, _playerPosition.x);
 
-    glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glBegin(GL_QUADS);
     {
@@ -166,7 +163,6 @@ void Maze::draw(sf::RenderTarget& target, sf::RenderStates states) const
         }
     }
     glEnd();
-    glDisable(GL_BLEND);
 #endif
 }
 

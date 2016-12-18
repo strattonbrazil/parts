@@ -1,6 +1,7 @@
 #include <SFML/Audio.hpp>
 #include <SFML/Graphics.hpp>
 #include <SFML/OpenGL.hpp>
+#include <boost/python.hpp>
 
 #include <player.hpp>
 #include <maze.hpp>
@@ -10,6 +11,8 @@
 
 int main()
 {
+    Py_Initialize();
+
     // Load a sprite to display
     sf::Texture texture;
     if (!texture.loadFromFile("/tmp/kitten.jpg"))
@@ -17,7 +20,7 @@ int main()
     sf::Sprite sprite(texture);
     // Create a graphical text to display
     sf::Font font;
-    if (!font.loadFromFile("/tmp/OpenSans-Regular.ttf"))
+    if (!font.loadFromFile("./fonts/RobotoCondensed-Regular.ttf"))
        return EXIT_FAILURE;
     sf::Text text("Hello SFML", font, 50);
 
@@ -25,6 +28,8 @@ int main()
     const int NUM_ROWS = 5;
     const int NUM_COLUMNS = 5;
     Maze maze(NUM_ROWS,NUM_COLUMNS);
+
+    sf::Clock clock;
 
     // Create the main window
     sf::RenderWindow window(sf::VideoMode(800, 600), "OpenGL", sf::Style::Default, sf::ContextSettings(32)); //"SFML window");
@@ -45,8 +50,8 @@ int main()
         // Draw the sprite
         //window.draw(sprite);
 
-        // Draw the string
-        //window.draw(text);
+        text.setPosition(100,100);
+        text.setColor(sf::Color::Red);
 
         if (!player.isMoving()) {
             sf::Vector2f pos = player.mazePos();
@@ -61,7 +66,11 @@ int main()
             }
         }
 
-        player.update();
+        float elapsed = clock.restart().asSeconds();
+        float fps = 1.f / elapsed;
+        //std::cout << "fps: " << fps << std::endl;
+
+        player.update(elapsed);
 
         sf::Vector2i globalPosition = sf::Mouse::getPosition();
 
@@ -78,6 +87,7 @@ int main()
         const float NUM_HORIZONTAL_CELLS = windowSize.x / PIXELS_PER_CELL;
 
         glMatrixMode(GL_PROJECTION);
+        glPushMatrix();
         glLoadIdentity();
         glOrtho(0, aspect * CELL_HEIGHT, CELL_HEIGHT, 0, -1, 1);
 
@@ -90,6 +100,13 @@ int main()
         glPushMatrix();
         window.draw(maze);
         glPopMatrix();
+
+        glMatrixMode(GL_PROJECTION);
+        glPopMatrix();
+        glMatrixMode(GL_MODELVIEW);
+
+        // Draw the string
+        //window.draw(text);
 
         // Update the window
         window.display();

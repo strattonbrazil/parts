@@ -11,7 +11,7 @@ public:
     sf::Vector2f mazePos() const;
     bool isMoving() { return _moving; }
 
-    void update();
+    void update(const float elapsed);
     void setMove(sf::Vector2i destination);
 
 private:

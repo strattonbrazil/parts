@@ -29,10 +29,10 @@ void Player::draw(sf::RenderTarget& target, sf::RenderStates states) const
     glEnd();
 }
 
-void Player::update()
+void Player::update(const float elapsed)
 {
     if (_moving) {
-        _transition += 0.001f;
+        _transition += 4.0f * elapsed;
         if (_transition > 0.99999f) {
             _moving = false;
             _from = _to;
