@@ -32,7 +32,7 @@ inline void drawLine(sf::Vector2i a, sf::Vector2i b, float thickness = 2.0f)
     glVertex2f(b.x, b.y);
 }
 
-Maze::Maze(int width, int height) : MAZE_WIDTH(width), MAZE_HEIGHT(height)
+Maze::Maze(int numRows, int numColumns) : NUM_ROWS(numRows), NUM_COLUMNS(numColumns)
 {
     // now time to insert the current working directory into the python path so module search can take advantage
     // this must happen after python has been initialised
@@ -44,7 +44,7 @@ Maze::Maze(int width, int height) : MAZE_WIDTH(width), MAZE_HEIGHT(height)
 
     boost::python::object mazeLib = boost::python::import("maze");
     boost::python::object createMaze = mazeLib.attr("create_maze");
-    boost::python::object maze = createMaze(MAZE_HEIGHT, MAZE_WIDTH);
+    boost::python::object maze = createMaze(NUM_ROWS, NUM_COLUMNS);
     std::cout << "len of open walls: " << len(maze) << std::endl;
     for (int i = 0; i < len(maze); i++) {
         boost::python::object openWall(maze[i]);
@@ -64,8 +64,8 @@ Maze::Maze(int width, int height) : MAZE_WIDTH(width), MAZE_HEIGHT(height)
         std::cout << wall << std::endl;
     }
     std::cout << "----" << std::endl;
-    for (int row = 0; row < MAZE_HEIGHT; row++) {
-        for (int column = 0; column < MAZE_WIDTH; column++) {
+    for (int row = 0; row < NUM_ROWS; row++) {
+        for (int column = 0; column < NUM_COLUMNS; column++) {
             std::cout << "row: " << row << " column: " << column << std::endl;
             Cell cell = getCell(row,column);
             std::cout << "left: " << cell.left << std::endl;
@@ -91,8 +91,8 @@ void Maze::draw(sf::RenderTarget& target, sf::RenderStates states) const
 
     glLineWidth(3.0f);
     glBegin(GL_LINES);
-    for (int row = 0; row < MAZE_HEIGHT; row++) {
-        for (int column = 0; column < MAZE_WIDTH; column++) {
+    for (int row = 0; row < NUM_ROWS; row++) {
+        for (int column = 0; column < NUM_COLUMNS; column++) {
             Cell cell = getCell(row, column);
             if (!cell.up) {
                 glColor3f(1,0,0);
@@ -123,12 +123,13 @@ void Maze::draw(sf::RenderTarget& target, sf::RenderStates states) const
     // player position in row/column form
     sf::Vector2f correctedPosition(_playerPosition.y, _playerPosition.x);
 
+    glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glBegin(GL_QUADS);
     {
-        //glColor4f(1,0,0,0.2f);
-        glColor4f(0,0,0,1);
-        for (int row = 0; row < MAZE_HEIGHT; row++) {
+        glColor4f(1,0,0,0.1f);
+        //glColor4f(0,0,0,1);
+        for (int row = 0; row < NUM_ROWS; row++) {
             for (int column = 0; column < MAZE_WIDTH; column++) {
                 Cell cell = getCell(row, column);
                 if (!cell.up) {
@@ -163,6 +164,7 @@ void Maze::draw(sf::RenderTarget& target, sf::RenderStates states) const
         }
     }
     glEnd();
+    glDisable(GL_BLEND);
 #endif
 }
 

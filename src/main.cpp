@@ -5,6 +5,7 @@
 
 #include <player.hpp>
 #include <maze.hpp>
+#include <goal.hpp>
 #include <util.hpp>
 
 #include <iostream>
@@ -25,9 +26,10 @@ int main()
     sf::Text text("Hello SFML", font, 50);
 
     Player player;
-    const int NUM_ROWS = 5;
-    const int NUM_COLUMNS = 5;
+    const int NUM_ROWS = 7;
+    const int NUM_COLUMNS = 10;
     Maze maze(NUM_ROWS,NUM_COLUMNS);
+    Goal goal(NUM_ROWS-1, NUM_COLUMNS-1);
 
     sf::Clock clock;
 
@@ -99,6 +101,10 @@ int main()
         glPopMatrix();
         glPushMatrix();
         window.draw(maze);
+        glPopMatrix();
+
+        glPushMatrix();
+        window.draw(goal);
         glPopMatrix();
 
         glMatrixMode(GL_PROJECTION);

@@ -26,8 +26,8 @@ public:
     void setCursorPosition(sf::Vector2i pos);
     sf::Vector2i extendFromCursor(sf::Vector2i p) const;
 
-    const int MAZE_WIDTH;
-    const int MAZE_HEIGHT;
+    const int NUM_ROWS;
+    const int NUM_COLUMNS;
 private:
     std::set<std::string> _openWalls;
     sf::Vector2f _playerPosition;
