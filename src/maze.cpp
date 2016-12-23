@@ -7,6 +7,8 @@
 
 #include <iostream>
 
+using namespace boost::python;
+
 inline std::string wallToKey(int row, int column, std::string dir)
 {
     return std::to_string(row) + "_" + std::to_string(column) + "_" + dir;
@@ -34,23 +36,18 @@ inline void drawLine(sf::Vector2i a, sf::Vector2i b, float thickness = 2.0f)
 
 Maze::Maze(int numRows, int numColumns) : NUM_ROWS(numRows), NUM_COLUMNS(numColumns)
 {
-    // now time to insert the current working directory into the python path so module search can take advantage
-    // this must happen after python has been initialised
-    PyObject* sysPath = PySys_GetObject((char*)"path");
-    PyList_Insert( sysPath, 0, PyString_FromString("/home/stratton/Public/parts/python"));
+    object main_module = import("__main__");
+    object main_namespace = main_module.attr("__dict__");
 
-    boost::python::object main_module = boost::python::import("__main__");
-    boost::python::object main_namespace = main_module.attr("__dict__");
-
-    boost::python::object mazeLib = boost::python::import("maze");
-    boost::python::object createMaze = mazeLib.attr("create_maze");
-    boost::python::object maze = createMaze(NUM_ROWS, NUM_COLUMNS);
+    object mazeLib = import("maze");
+    object createMaze = mazeLib.attr("create_maze");
+    object maze = createMaze(NUM_ROWS, NUM_COLUMNS);
     std::cout << "len of open walls: " << len(maze) << std::endl;
     for (int i = 0; i < len(maze); i++) {
-        boost::python::object openWall(maze[i]);
-        const int row = boost::python::extract<int>(boost::python::object(openWall[0]));
-        const int column = boost::python::extract<int>(boost::python::object(openWall[1]));
-        char const* c_str = boost::python::extract<char const*>(boost::python::object(openWall[2]));
+        object openWall(maze[i]);
+        const int row = extract<int>(object(openWall[0]));
+        const int column = extract<int>(object(openWall[1]));
+        char const* c_str = extract<char const*>(object(openWall[2]));
 
         std::string wallKey = wallToKey(row, column, c_str);
         _openWalls.insert(wallKey);
@@ -119,7 +116,7 @@ void Maze::draw(sf::RenderTarget& target, sf::RenderStates states) const
     glEnd();
 
     // draw stencil
-#if 1
+#if 0
     // player position in row/column form
     sf::Vector2f correctedPosition(_playerPosition.y, _playerPosition.x);
 
@@ -127,10 +124,10 @@ void Maze::draw(sf::RenderTarget& target, sf::RenderStates states) const
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glBegin(GL_QUADS);
     {
-        glColor4f(1,0,0,0.1f);
-        //glColor4f(0,0,0,1);
+        //glColor4f(1,0,0,0.1f);
+        glColor4f(0,0,0,1);
         for (int row = 0; row < NUM_ROWS; row++) {
-            for (int column = 0; column < MAZE_WIDTH; column++) {
+            for (int column = 0; column < NUM_COLUMNS; column++) {
                 Cell cell = getCell(row, column);
                 if (!cell.up) {
                     sf::Vector2f a(column, row);
