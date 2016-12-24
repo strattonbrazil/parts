@@ -1,6 +1,7 @@
 import sys
 
-def get_minigame_scene(gameContext):
+def update_game(gameContext):
+    #print gameContext
     gameContext["assets"] = [
         {
             "type" : "rectangle",
@@ -9,4 +10,3 @@ def get_minigame_scene(gameContext):
             "size" : [0.5,0.5]
         }
     ]
-    return gameContext

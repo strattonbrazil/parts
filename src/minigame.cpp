@@ -13,7 +13,7 @@ MiniGame::MiniGame()
     object main_namespace = main_module.attr("__dict__");
 
     object minigameLib = import("minigame");
-    _minigameUpdateFunc = minigameLib.attr("get_minigame_scene");
+    _minigameUpdateFunc = minigameLib.attr("update_game");
 }
 
 void parseArray(object pyArray, float* array, int count)
@@ -38,7 +38,8 @@ void drawRectangle(float* position, float* size, float* color)
 
 void MiniGame::update(const float elapsed)
 {
-    _gameContext = _minigameUpdateFunc(_gameContext);
+    _gameContext["mouseDown"] = sf::Mouse::isButtonPressed(sf::Mouse::Left);
+    _minigameUpdateFunc(_gameContext);
 }
 
 void MiniGame::draw(sf::RenderTarget& target, sf::RenderStates states) const

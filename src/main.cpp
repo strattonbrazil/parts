@@ -49,6 +49,7 @@ int main()
     sf::RenderTexture *minigameBuffer = 0;
 
     MiniGame miniGame;
+    sf::Texture minigameTexture;
 
     // Start the game loop
     while (window.isOpen())
@@ -129,17 +130,29 @@ int main()
         // Draw the string
         //window.draw(text);
 
+        const int MINIGAME_TEXTURE_SIZE = 256;
         if (minigameBuffer == 0) {
             minigameBuffer = new sf::RenderTexture();
-            minigameBuffer->create(512, 512, false);
+            minigameBuffer->create(MINIGAME_TEXTURE_SIZE, MINIGAME_TEXTURE_SIZE, false);
+            minigameTexture = minigameBuffer->getTexture();
         }
 
         minigameBuffer->setActive(true);
         minigameBuffer->draw(miniGame);
-        minigameBuffer->setActive(false);
+        window.setActive(true);
 
-        //sf::Sprite sprite(minigameBuffer->getTexture());
-        //window.draw(sprite);
+
+        const float MINIGAME_PADDING = 40;
+        const float MINIGAME_RENDER_SIZE = windowSize.y - MINIGAME_PADDING * 2;
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0, windowSize.x, windowSize.y, 0, -1, 1);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        glTranslatef((windowSize.x - MINIGAME_RENDER_SIZE) * 0.5f, MINIGAME_PADDING, 0);
+        sf::Sprite sprite(minigameBuffer->getTexture());
+        sprite.setScale(MINIGAME_RENDER_SIZE / MINIGAME_TEXTURE_SIZE, MINIGAME_RENDER_SIZE / MINIGAME_TEXTURE_SIZE);
+        window.draw(sprite);
 
         // Update the window
         window.display();
