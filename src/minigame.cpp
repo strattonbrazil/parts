@@ -8,6 +8,8 @@
 MiniGame::MiniGame()
 {
     _gameContext = dict();
+    _gameContext["finished"] = false;
+    _finished = false;
 
     object main_module = import("__main__");
     object main_namespace = main_module.attr("__dict__");
@@ -36,10 +38,17 @@ void drawRectangle(float* position, float* size, float* color)
     glEnd();
 }
 
-void MiniGame::update(const float elapsed)
+void MiniGame::update(const float elapsed, sf::Vector2f mousePos)
 {
+    _gameContext["elapsed"] = elapsed
     _gameContext["mouseDown"] = sf::Mouse::isButtonPressed(sf::Mouse::Left);
+    _gameContext["mousePos"] = make_tuple(mousePos.x, mousePos.y);
+    
     _minigameUpdateFunc(_gameContext);
+    object finished = _gameContext["finished"];
+    if (!finished.is_none()) {
+        _finished = extract<bool>(_gameContext["finished"]);
+    }
 }
 
 void MiniGame::draw(sf::RenderTarget& target, sf::RenderStates states) const

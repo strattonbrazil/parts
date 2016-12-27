@@ -22,3 +22,8 @@ sf::Vector2f extendFromPoint(sf::Vector2f p1, sf::Vector2f p2)
     v *= 5000.0f; // amount to extend
     return v + p1;
 }
+
+float distance(sf::Vector2f a, sf::Vector2f b)
+{
+    return sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y * b.y));
+}

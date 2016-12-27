@@ -12,7 +12,7 @@
 
 #include <iostream>
 
-enum GameMode { SEARCHING, GOAL };
+enum GameMode { SEARCHING, GOAL, FLEEING };
 
 int main()
 {
@@ -36,8 +36,8 @@ int main()
     sf::Text text("Hello SFML", font, 50);
 
     Player player;
-    const int NUM_ROWS = 7;
-    const int NUM_COLUMNS = 10;
+    const int NUM_ROWS = 1;
+    const int NUM_COLUMNS = 3;
     Maze maze(NUM_ROWS,NUM_COLUMNS);
     Goal goal(NUM_ROWS-1, NUM_COLUMNS-1);
 
@@ -50,6 +50,8 @@ int main()
 
     MiniGame miniGame;
     sf::Texture minigameTexture;
+
+    float minigameOpacity;
 
     // Start the game loop
     while (window.isOpen())
@@ -70,7 +72,7 @@ int main()
         text.setPosition(100,100);
         text.setColor(sf::Color::Red);
 
-        if (!player.isMoving()) {
+        if (mode != GameMode::GOAL && !player.isMoving()) {
             sf::Vector2f pos = player.mazePos();
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::S) && !maze.hasWall(pos.x, pos.y, "down")) {
                 player.setMove(sf::Vector2i(1,0));
@@ -87,18 +89,29 @@ int main()
         float fps = 1.f / elapsed;
         //std::cout << "fps: " << fps << std::endl;
 
+
+        sf::Vector2u windowSize = window.getSize();
+        const float MINIGAME_PADDING = 40;
+        const float MINIGAME_RENDER_SIZE = windowSize.y - MINIGAME_PADDING * 2;
+        const float MINIGAME_LEFT_OFFSET = (windowSize.x - MINIGAME_RENDER_SIZE) * 0.5f;
+        sf::Vector2i pos = sf::Mouse::getPosition(window);
+        sf::Vector2f minigameRelativePos(pos.x - MINIGAME_LEFT_OFFSET, pos.y - MINIGAME_PADDING);
+        sf::Vector2f minigameNormalPos = minigameRelativePos / MINIGAME_RENDER_SIZE;
+
         player.update(elapsed);
-        miniGame.update(elapsed);
-
-        sf::Vector2i globalPosition = sf::Mouse::getPosition();
-
-        // get the local mouse position (relative to a window)
-        sf::Vector2i localPosition = sf::Mouse::getPosition(window);
+        miniGame.update(elapsed, minigameNormalPos);
 
         maze.setPlayerPosition(player.mazePos());
 
+        // entering goal area
+        if (mode == GameMode::SEARCHING && distance(player.mazePos(), goal.mazePos()) < 0.5f) {
+            mode = GameMode::GOAL;
+            minigameOpacity = 0.0f;
+        } else if (mode == GameMode::GOAL && miniGame.isFinished()) {
+            std::cout << "finished" << std::endl;
+            mode = GameMode::FLEEING;
+        }
 
-        sf::Vector2u windowSize = window.getSize();
         float aspect = (float)windowSize.x / windowSize.y;
         const float CELL_HEIGHT = NUM_ROWS + 2; // leave cell worth on top and bottom
         const float PIXELS_PER_CELL = windowSize.y / CELL_HEIGHT;
@@ -130,29 +143,44 @@ int main()
         // Draw the string
         //window.draw(text);
 
-        const int MINIGAME_TEXTURE_SIZE = 256;
-        if (minigameBuffer == 0) {
-            minigameBuffer = new sf::RenderTexture();
-            minigameBuffer->create(MINIGAME_TEXTURE_SIZE, MINIGAME_TEXTURE_SIZE, false);
-            minigameTexture = minigameBuffer->getTexture();
+        if (mode == GameMode::GOAL) {
+            const int MINIGAME_TEXTURE_SIZE = 256;
+            if (minigameBuffer == 0) {
+                minigameBuffer = new sf::RenderTexture();
+                minigameBuffer->create(MINIGAME_TEXTURE_SIZE, MINIGAME_TEXTURE_SIZE, false);
+                minigameTexture = minigameBuffer->getTexture();
+            }
+
+            minigameBuffer->setActive(true);
+            minigameBuffer->draw(miniGame);
+            window.setActive(true);
+
+            minigameOpacity = std::min(minigameOpacity + 1.0f * elapsed, 1.0f);
+
+            glMatrixMode(GL_PROJECTION);
+            glLoadIdentity();
+            glOrtho(0, windowSize.x, windowSize.y, 0, -1, 1);
+
+            // darken non-minigame portion of screen
+            const float BACKGROUND_OPACITY = 0.8f;
+            glColor4f(0, 0, 0, minigameOpacity * BACKGROUND_OPACITY);
+            glBegin(GL_QUADS);
+            {
+                glVertex2f(0, 0);
+                glVertex2f(windowSize.x, 0);
+                glVertex2f(windowSize.x, windowSize.y);
+                glVertex2f(0, windowSize.y);
+            }
+            glEnd();
+
+            glMatrixMode(GL_MODELVIEW);
+            glLoadIdentity();
+            glTranslatef(MINIGAME_LEFT_OFFSET, MINIGAME_PADDING, 0);
+            sf::Sprite sprite(minigameBuffer->getTexture());
+            sprite.setScale(MINIGAME_RENDER_SIZE / MINIGAME_TEXTURE_SIZE, MINIGAME_RENDER_SIZE / MINIGAME_TEXTURE_SIZE);
+            sprite.setColor(sf::Color(255,255,255,255 * minigameOpacity));
+            window.draw(sprite);
         }
-
-        minigameBuffer->setActive(true);
-        minigameBuffer->draw(miniGame);
-        window.setActive(true);
-
-
-        const float MINIGAME_PADDING = 40;
-        const float MINIGAME_RENDER_SIZE = windowSize.y - MINIGAME_PADDING * 2;
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        glOrtho(0, windowSize.x, windowSize.y, 0, -1, 1);
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-        glTranslatef((windowSize.x - MINIGAME_RENDER_SIZE) * 0.5f, MINIGAME_PADDING, 0);
-        sf::Sprite sprite(minigameBuffer->getTexture());
-        sprite.setScale(MINIGAME_RENDER_SIZE / MINIGAME_TEXTURE_SIZE, MINIGAME_RENDER_SIZE / MINIGAME_TEXTURE_SIZE);
-        window.draw(sprite);
 
         // Update the window
         window.display();
