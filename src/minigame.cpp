@@ -40,10 +40,10 @@ void drawRectangle(float* position, float* size, float* color)
 
 void MiniGame::update(const float elapsed, sf::Vector2f mousePos)
 {
-    _gameContext["elapsed"] = elapsed
+    _gameContext["elapsed"] = elapsed;
     _gameContext["mouseDown"] = sf::Mouse::isButtonPressed(sf::Mouse::Left);
     _gameContext["mousePos"] = make_tuple(mousePos.x, mousePos.y);
-    
+
     _minigameUpdateFunc(_gameContext);
     object finished = _gameContext["finished"];
     if (!finished.is_none()) {
@@ -64,7 +64,7 @@ void MiniGame::draw(sf::RenderTarget& target, sf::RenderStates states) const
     glPushMatrix();
     glLoadIdentity();
 
-    glClearColor(0,0,1,1);
+    glClearColor(.2,.2,.2,1);
     glClear(GL_COLOR_BUFFER_BIT);
 
     object assets = _gameContext["assets"];

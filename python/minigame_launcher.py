@@ -1,8 +1,11 @@
 #!/usr/bin/python
 import sys
+import os
 import time
+import subprocess
 from PyQt4 import QtCore
 from PyQt4 import QtGui
+from playsound import playsound
 
 from minigame import update_game
 
@@ -17,8 +20,17 @@ class MinigameView(QtGui.QWidget):
         self.ctx = {
             "assets": []
         }
+        self._leftMouseButtonDown = False
+
+        #self.playSound("piano-c")
 
         self.updateCtx()
+
+    def playSound(self, soundFile):
+        soundsDir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../sounds")
+        soundFilePath = os.path.join(soundsDir, soundFile + ".wav")
+
+        self.player = subprocess.Popen(["mplayer", soundFilePath], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     def updateCtx(self):
         currentTime = self.getCurrentTime()
@@ -29,9 +41,13 @@ class MinigameView(QtGui.QWidget):
 
         self.ctx["elapsed"] = elapsed
         self.ctx["mousePos"] = (mousePos.x() / windowSize, mousePos.y() / windowSize)
-        self.ctx["mouseDown"] = False
+        self.ctx["mouseDown"] = self._leftMouseButtonDown
 
         update_game(self.ctx)
+
+        if "sound" in self.ctx:
+            self.playSound(self.ctx["sound"])
+            self.ctx.pop("sound")
 
         self.lastTime = currentTime
 
@@ -41,6 +57,8 @@ class MinigameView(QtGui.QWidget):
     def paintEvent(self, event):
         painter = QtGui.QPainter()
         painter.begin(self)
+
+        painter.fillRect(0, 0, self.width(), self.height(), QtGui.QColor(20,20,20))
 
         windowSize = min(self.width(), self.height())
 
@@ -58,6 +76,13 @@ class MinigameView(QtGui.QWidget):
 
         painter.end()
 
+    def mousePressEvent(self, event):
+        if event.button() == QtCore.Qt.LeftButton:
+            self._leftMouseButtonDown = True
+
+    def mouseReleaseEvent(self, event):
+        if event.button() == QtCore.Qt.LeftButton:
+            self._leftMouseButtonDown = False
 
     def getCurrentTime(self):
         return int(round(time.time() * 1000))
